@@ -1,15 +1,12 @@
-# 1. 定义本地缓存文件路径
-LOCAL_ENV_CACHE="$HOME/.zsh_device_cache"
+PUBLIC_IP_CACHE="$HOME/.zsh_public_ip_cache"
 
-# 2. 如果缓存不存在，则获取一次 IP 并写入
-if [[ ! -f "$LOCAL_ENV_CACHE" ]]; then
-    echo "# Device specific cache" > "$LOCAL_ENV_CACHE"
-    # 获取内网 IP
-    _ip=$(hostname -I | awk '{print $1}')
-    echo "export MY_STATIC_IP='$_ip'" >> "$LOCAL_ENV_CACHE"
-    # 根据主机名设默认符号（可选）
-    [[ "$HOST" == "Shiva" ]] && echo "export MY_CUSTOM_SYMBOL='❯'" >> "$LOCAL_ENV_CACHE"
+# 如果没有缓存，联网抓取一次公网 IP
+if [[ ! -f "$PUBLIC_IP_CACHE" ]]; then
+    _pub_ip=$(curl -s --connect-timeout 2 ip.fm | grep -o -E "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}")
+    if [[ -n "$_pub_ip" ]]; then
+        echo "export MY_PUBLIC_IP='$_pub_ip'" > "$PUBLIC_IP_CACHE"
+    fi
 fi
 
-# 3. 加载缓存（瞬时完成）
-source "$LOCAL_ENV_CACHE"
+# 加载缓存
+[ -f "$PUBLIC_IP_CACHE" ] && source "$PUBLIC_IP_CACHE"
